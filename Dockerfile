@@ -1,37 +1,37 @@
 # --------------------------------------------------
 
-FROM golang:alpine AS pprotein
+FROM alpine AS pprotein
 
-RUN apk add npm make
+RUN apk add go npm make
 
-WORKDIR $GOPATH/src/app
+ENV GOPATH /go
+ENV PATH $GOPATH/bin:$PATH
+
+WORKDIR /go/src/app
 COPY . .
 
 RUN make build
 
 # --------------------------------------------------
 
-FROM golang:alpine AS alp
+FROM alpine AS tools
 
-RUN go install github.com/tkuchiki/alp/cmd/alp@latest
+RUN apk add go
 
-# --------------------------------------------------
-
-FROM golang:alpine AS slp
-
-RUN apk add gcc musl-dev
+ENV GOPATH /go
+RUN go install github.com/tkuchiki/alp/cli/alp@latest
 RUN go install github.com/tkuchiki/slp/cmd/slp@latest
 
 # --------------------------------------------------
 
 FROM alpine
 
-RUN apk add --no-cache graphviz
+RUN apk add --no-cache bash perl perl-dbd-mysql perl-time-hires graphviz
 
 COPY --from=pprotein /go/src/app/pprotein /usr/local/bin/
 COPY --from=pprotein /go/src/app/pprotein-agent /usr/local/bin/
-COPY --from=alp /go/bin/alp /usr/local/bin/
-COPY --from=slp /go/bin/slp /usr/local/bin/
+COPY --from=tools /go/bin/alp /usr/local/bin/
+COPY --from=tools /go/bin/slp /usr/local/bin/
 
 RUN mkdir -p /opt/pprotein
 WORKDIR /opt/pprotein
