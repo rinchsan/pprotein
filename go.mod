@@ -1,6 +1,6 @@
 module github.com/kaz/pprotein
 
-go 1.19
+go 1.21
 
 require (
 	github.com/alexandrevicenzi/go-sse v1.6.0
